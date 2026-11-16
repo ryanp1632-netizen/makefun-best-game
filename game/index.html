@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MARGINALIA: The Hare Knight's Last Folio</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #2a1f14; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; }
+    #page { display: block; cursor: crosshair; box-shadow: 0 0 60px rgba(0, 0, 0, 0.6); touch-action: none; }
+    #hint { position: fixed; bottom: 6px; left: 0; right: 0; text-align: center; color: #c9b68e;
+      font: 12px "Palatino Linotype", Georgia, serif; opacity: 0.6; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <canvas id="page" width="1280" height="800" aria-label="MARGINALIA game canvas"></canvas>
+  <div id="hint">WASD move - hold left mouse to draw ink - close a loop to illuminate - SPACE seal - SHIFT hop - ESC pause - M mute</div>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
