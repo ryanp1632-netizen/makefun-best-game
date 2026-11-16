@@ -79,6 +79,14 @@ const SCENES = {
     drawOverlays(ctx, fx);
     drawQuill(ctx, pilot.aimX, pilot.aimY, !!run.ink.current, false);
   },
+  early(ctx, seed, ledger) {
+    const game = newGame(seed, 'scribe');
+    game.pilot.rest = 999;
+    playUntil(game, (run) => run.time >= 9, 20);
+    const { run, fx } = game;
+    drawWorld(ctx, run, fx, run.time);
+    drawHud(ctx, run, ledger.best.scribe, run.time);
+  },
   title(ctx, seed, ledger) {
     earlierRuns(ledger, [seed + 200, seed + 201, seed + 202], 'scribe');
     ledger.difficulty = 'scribe';

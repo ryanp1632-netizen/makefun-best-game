@@ -146,6 +146,28 @@ export function drawBanner(ctx, run) {
   ctx.restore();
 }
 
+/** Until the first foe is Illuminated, a ribbon on the page shows how: a dotted loop drawing itself. */
+function drawFirstLoopHint(ctx, run, time) {
+  if (run.folio !== 0 || run.stats.illuminated > 0 || run.stage !== 'verse' || run.banner) return;
+  const cx = VIEW.w / 2;
+  const y = 650;
+  panel(ctx, cx - 360, y - 30, 720, 58, { radius: 12, shadow: false, fill: 'rgba(255, 247, 226, 0.92)', edge: PALETTE.gold });
+  const spin = (time * 1.6) % 1;
+  ctx.save();
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 3;
+  ctx.setLineDash([6, 5]);
+  ctx.beginPath();
+  ctx.arc(cx - 318, y, 18, -Math.PI / 2, -Math.PI / 2 + spin * Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = PALETTE.ink;
+  ctx.beginPath();
+  ctx.arc(cx - 318, y, 4, 0, Math.PI * 2);
+  ctx.fill();
+  text(ctx, 'Hold the LEFT MOUSE BUTTON and draw a circle around the blots', cx + 24, y + 7, { size: 19, align: 'center' });
+}
+
 export function drawHud(ctx, run, best, time) {
   ctx.fillStyle = 'rgba(242, 228, 195, 0.55)';
   ctx.fillRect(0, 0, VIEW.w, HUD.topBand - 2);
@@ -154,6 +176,7 @@ export function drawHud(ctx, run, best, time) {
   drawFolioLine(ctx, run);
   drawScore(ctx, run, best, time);
   drawBottom(ctx, run, time);
+  drawFirstLoopHint(ctx, run, time);
   drawBanner(ctx, run);
 }
 

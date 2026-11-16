@@ -64,6 +64,13 @@ function startGame() {
     lastPen: null,
   };
   newDemo(app);
+  // leaving the window mid-verse pauses the run, so a stray alt-tab never costs a heart
+  window.addEventListener('blur', () => {
+    if (app.screen === 'play') {
+      app.screen = 'pause';
+      setQuill(false);
+    }
+  });
   let last = performance.now();
   const frame = (now) => {
     const dt = Math.min(0.1, (now - last) / 1000);
