@@ -88,8 +88,8 @@ function drawBottom(ctx, run, time) {
   ctx.stroke();
   text(ctx, `${run.level}`, 42, y + 31, { size: 24, align: 'center', baseline: 'middle' });
   text(ctx, 'ILLUMINATION', 76, y + 20, { size: 15, color: PALETTE.inkSoft });
-  bar(ctx, 76, y + 28, 200, 14, run.xp / run.xpNext, PALETTE.gold);
-  text(ctx, `gold leaf ${run.xp}/${run.xpNext}`, 286, y + 41, { size: 14, color: PALETTE.inkSoft, weight: 'normal' });
+  bar(ctx, 76, y + 28, 176, 14, run.xp / run.xpNext, PALETTE.gold);
+  text(ctx, `leaf ${run.xp}/${run.xpNext}`, 260, y + 41, { size: 14, color: PALETTE.inkSoft, weight: 'normal' });
   // rubric strip
   let x = 80;
   const owned = RUBRICS.filter((r) => run.rubrics[r.id]);
@@ -101,14 +101,14 @@ function drawBottom(ctx, run, time) {
   }
   // win / lose rule
   const cx = VIEW.w / 2;
-  panel(ctx, cx - 250, y + 4, 500, 54, { radius: 9, shadow: false, fill: 'rgba(255, 247, 226, 0.85)' });
-  text(ctx, 'WIN: blot all 3 Grotesques', cx, y + 26, { size: 19, color: PALETTE.verdigris, align: 'center' });
-  text(ctx, "LOSE: the hare's hearts run out", cx, y + 48, { size: 19, color: PALETTE.vermilion, align: 'center' });
+  panel(ctx, cx - 262, y + 2, 524, 60, { radius: 9, shadow: false, fill: 'rgba(255, 247, 226, 0.85)' });
+  text(ctx, 'WIN: blot all 3 Grotesques', cx, y + 27, { size: 23, color: PALETTE.verdigris, align: 'center' });
+  text(ctx, "LOSE: the hare's hearts run out", cx, y + 54, { size: 23, color: PALETTE.vermilion, align: 'center' });
   // cooldowns
   const sealReady = run.seal.cooldown <= 0;
-  chip(ctx, 'seal', 'SEAL', 'SPACE', 900, y + 8, sealReady ? 1 : 1 - run.seal.cooldown / SEAL.cooldown, PALETTE.vermilion, time);
+  chip(ctx, 'seal', 'SEAL', 'SPACE', 910, y + 8, sealReady ? 1 : 1 - run.seal.cooldown / SEAL.cooldown, PALETTE.vermilion, time);
   const p = run.player;
-  chip(ctx, 'hare', 'HOP', 'SHIFT', 1090, y + 8, p.hopCooldown <= 0 ? 1 : 1 - p.hopCooldown / hopCooldown(run), PALETTE.verdigris, time);
+  chip(ctx, 'hare', 'HOP', 'SHIFT', 1094, y + 8, p.hopCooldown <= 0 ? 1 : 1 - p.hopCooldown / hopCooldown(run), PALETTE.verdigris, time);
 }
 
 function chip(ctx, icon, label, key, x, y, ready, color, time) {
