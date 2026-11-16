@@ -111,8 +111,14 @@ const SCENES = {
   },
   results(ctx, seed, ledger) {
     earlierRuns(ledger, [seed + 400, seed + 401], 'scribe');
-    const game = newGame(seed, 'scribe');
-    playUntil(game, () => false, 900);
+    // the colophon of the first run, from this seed on, that saved the manuscript (every run is played in full)
+    let game = null;
+    for (let s = seed; s < seed + 8; s += 1) {
+      game = newGame(s, 'scribe');
+      playUntil(game, () => false, 900);
+      if (game.run.won) break;
+      recordRun(ledger, summarizeRun(game.run));
+    }
     const summary = summarizeRun(game.run);
     const record = recordRun(ledger, summary);
     playUntil(game, () => false, 0);
