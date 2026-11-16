@@ -243,17 +243,17 @@ export function clearStains(layer) {
 
 export function stainAt(layer, rng, x, y, r, gilded) {
   const ctx = layer.ctx;
-  const tint = gilded ? '201, 150, 30' : '40, 32, 60';
+  const tint = gilded ? '201, 150, 30' : '110, 80, 60';
   // a soft central bloom, a few satellite drops and a speckle spray, like a real ink spatter
   const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-  g.addColorStop(0, `rgba(${tint}, ${gilded ? 0.2 : 0.16})`);
-  g.addColorStop(0.7, `rgba(${tint}, ${gilded ? 0.12 : 0.1})`);
+  g.addColorStop(0, `rgba(${tint}, ${gilded ? 0.16 : 0.09})`);
+  g.addColorStop(0.7, `rgba(${tint}, ${gilded ? 0.09 : 0.05})`);
   g.addColorStop(1, `rgba(${tint}, 0)`);
   ctx.fillStyle = g;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = `rgba(${tint}, ${gilded ? 0.16 : 0.12})`;
+  ctx.fillStyle = `rgba(${tint}, ${gilded ? 0.14 : 0.07})`;
   for (let i = 0; i < 3; i += 1) {
     const a = rng.range(0, Math.PI * 2);
     const d = r * rng.range(0.9, 1.9);

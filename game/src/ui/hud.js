@@ -72,7 +72,7 @@ function drawScore(ctx, run, best, time) {
   const live = f.timer > 0;
   const mult = `FLOURISH x${f.mult}`;
   const pulse = live && f.mult > 1 ? 1 + Math.sin(time * 12) * 0.05 : 1;
-  text(ctx, mult, right, 72, { size: Math.round(22 * pulse), align: 'right', color: f.mult > 1 ? PALETTE.vermilion : 'rgba(28,24,38,0.4)' });
+  text(ctx, mult, right, 72, { size: Math.round(22 * pulse), align: 'right', color: f.mult > 1 ? PALETTE.vermilion : live ? PALETTE.ink : 'rgba(28,24,38,0.4)' });
   if (live) bar(ctx, right - 330, 62, 120, 10, f.timer / FLOURISH_WINDOW, PALETTE.gold);
 }
 

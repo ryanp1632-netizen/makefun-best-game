@@ -66,6 +66,19 @@ const SCENES = {
     drawOverlays(ctx, fx);
     drawQuill(ctx, pilot.aimX, pilot.aimY, !!run.ink.current, false);
   },
+  boss(ctx, seed, ledger) {
+    earlierRuns(ledger, [seed + 100], 'scribe');
+    const game = newGame(seed, 'scribe');
+    const folio = Number(new URLSearchParams(window.location.search).get('folio') || 1);
+    playUntil(game, (run) => run.folio === folio && run.stage === 'boss' && run.boss && run.boss.emerge <= 0 && run.boss.hp < run.boss.maxHp * 0.7, 900);
+    playUntil(game, (run, events) => events.some((e) => e.type === 'loop' && e.n >= 1), 20);
+    playUntil(game, () => false, 0.12);
+    const { run, fx, pilot } = game;
+    drawWorld(ctx, run, fx, run.time);
+    drawHud(ctx, run, ledger.best.scribe, run.time);
+    drawOverlays(ctx, fx);
+    drawQuill(ctx, pilot.aimX, pilot.aimY, !!run.ink.current, false);
+  },
   title(ctx, seed, ledger) {
     earlierRuns(ledger, [seed + 200, seed + 201, seed + 202], 'scribe');
     ledger.difficulty = 'scribe';

@@ -3,6 +3,7 @@
 import { DIFFICULTIES, DIFFICULTY_ORDER, PALETTE, VIEW } from '../config.js';
 import { FEATS } from '../sim/scoring.js';
 import { drawIcon } from '../art/icons.js';
+import { drawBestiary } from '../art/bestiary.js';
 import { button, dropCap, keyCap, panel, tag, text } from './widgets.js';
 
 const RULES = [
@@ -22,19 +23,24 @@ export function drawTitle(ctx, ui, ledger, time) {
   ctx.fillRect(0, 0, VIEW.w, VIEW.h);
 
   // Title block
-  panel(ctx, 34, 28, 712, 196, { radius: 16 });
-  dropCap(ctx, 'M', 56, 50, 150, time);
-  text(ctx, 'ARGINALIA', 220, 132, { size: 80, color: PALETTE.ink, outline: PALETTE.goldPale, outlineWidth: 8 });
-  text(ctx, "The Hare Knight's Last Folio", 228, 182, { size: 30, color: PALETTE.vermilion, italic: true, weight: 'normal' });
+  panel(ctx, 34, 28, 712, 168, { radius: 16 });
+  dropCap(ctx, 'M', 54, 44, 132, time);
+  text(ctx, 'ARGINALIA', 200, 122, { size: 80, color: PALETTE.ink, outline: PALETTE.goldPale, outlineWidth: 8 });
+  text(ctx, "The Hare Knight's Last Folio", 208, 166, { size: 28, color: PALETTE.vermilion, italic: true, weight: 'normal' });
 
   // Rules
-  panel(ctx, 34, 240, 712, 412, { radius: 16 });
-  text(ctx, 'HOW THE MANUSCRIPT IS SAVED', 390, 280, { size: 22, color: PALETTE.vermilion, align: 'center' });
+  panel(ctx, 34, 208, 712, 318, { radius: 16 });
+  text(ctx, 'HOW THE MANUSCRIPT IS SAVED', 390, 240, { size: 21, color: PALETTE.vermilion, align: 'center' });
   RULES.forEach(([label, color, line], i) => {
-    const y = 330 + i * 46;
-    tag(ctx, label, 58, y, color, 18);
-    text(ctx, line, 162, y, { size: 22, color: PALETTE.ink, weight: 'normal' });
+    const y = 282 + i * 37;
+    tag(ctx, label, 58, y, color, 17);
+    text(ctx, line, 162, y, { size: 21, color: PALETTE.ink, weight: 'normal' });
   });
+
+  // Bestiary
+  panel(ctx, 34, 538, 712, 118, { radius: 16 });
+  text(ctx, 'THE BESTIARY: 6 FOES AND 3 GROTESQUES', 390, 560, { size: 15, color: PALETTE.inkSoft, align: 'center' });
+  drawBestiary(ctx, 44, 562, 692, time);
 
   // Controls strip
   panel(ctx, 34, 668, 1212, 104, { radius: 14 });
