@@ -7,8 +7,8 @@ import { sealRadius } from './weapons.js';
 
 const PREFERENCE = ['echo', 'vermilion', 'inkwell', 'quill', 'twin', 'mail', 'dropcap', 'patience', 'gilt', 'barbs', 'haste', 'wax', 'lapis', 'saint', 'lodestone'];
 
-export function createPilot(skill = 1, pace = 1.25) {
-  return { plan: null, step: 0, rest: 0.6, skill, pace, aimX: 640, aimY: 400 };
+export function createPilot(skill = 1, pace = 1.25, minCrowd = 2) {
+  return { plan: null, step: 0, rest: 0.6, skill, pace, minCrowd, aimX: 640, aimY: 400 };
 }
 
 /** The rubric the pilot takes from an offer (index into run.offer). */
@@ -163,7 +163,7 @@ export function pilotControls(run, pilot, dt) {
   } else if (pilot.rest <= 0 && !run.ink.current) {
     const crowd = findCrowd(run);
     const cost = Math.PI * 2 * (crowd ? crowd.r : 0) * INK.costPerPixel + 4;
-    if (crowd && crowd.count >= (run.boss && !run.boss.dead ? 1 : 2) && run.ink.level > cost) {
+    if (crowd && crowd.count >= (run.boss && !run.boss.dead ? 1 : pilot.minCrowd) && run.ink.level > cost) {
       pilot.plan = planLoop(run, crowd);
       pilot.step = 0;
       pen = { down: true, x: pilot.plan[0].x, y: pilot.plan[0].y };

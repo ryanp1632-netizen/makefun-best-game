@@ -39,8 +39,8 @@ function playUntil(game, stop, maxSeconds, pickWhen = () => true) {
   return false;
 }
 
-function newGame(seed, difficulty, withFx = true) {
-  return { run: createRun({ seed, difficulty }), pilot: createPilot(1, 2), fx: withFx ? createEffects() : null };
+function newGame(seed, difficulty, withFx = true, minCrowd = 2) {
+  return { run: createRun({ seed, difficulty }), pilot: createPilot(1, 2, minCrowd), fx: withFx ? createEffects() : null };
 }
 
 /** Earlier runs of the same autopilot, so the ledger holds real bests, feats and recent runs. */
@@ -55,10 +55,16 @@ function earlierRuns(ledger, seeds, difficulty) {
 const SCENES = {
   play(ctx, seed, ledger) {
     earlierRuns(ledger, [seed + 100], 'scribe');
-    const game = newGame(seed, 'scribe');
-    playUntil(game, (run) => run.time >= 168, 400);
+    // a patient hand (it waits for a crowd of six before it draws) keeps ink in the well, so the
+    // cover catches a big loop through a crowded page with ink to spare and a Flourish chain running
+    let game = newGame(seed, 'scribe', true, 6);
     const crowded = (run) => run.foes.filter((f) => !f.dead).length;
-    playUntil(game, (run, events) => crowded(run) >= 22 && events.some((e) => e.type === 'loop' && e.n >= 5), 120);
+    const good = (run, events) => run.time >= 130 && crowded(run) >= 15 && run.ink.level >= run.ink.max * 0.4 && run.flourish.mult >= 2 && events.some((e) => e.type === 'loop' && e.n >= 7);
+    if (!playUntil(game, good, 400)) {
+      game = newGame(seed, 'scribe');
+      playUntil(game, (run) => run.time >= 168, 400);
+      playUntil(game, (run, events) => crowded(run) >= 22 && events.some((e) => e.type === 'loop' && e.n >= 5), 120);
+    }
     playUntil(game, () => false, 0.12);
     const { run, fx, pilot } = game;
     drawWorld(ctx, run, fx, run.time);

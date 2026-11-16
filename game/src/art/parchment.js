@@ -71,8 +71,8 @@ function paintScript(ctx, rng) {
       ctx.moveTo(x0, y + 4);
       ctx.lineTo(x1, y + 4);
       ctx.stroke();
-      let x = x0 + (y === PAGE.top + 50 ? 70 : 0);
-      ctx.strokeStyle = 'rgba(45, 30, 40, 0.085)';
+      let x = x0 + (x0 < PAGE.left + 100 && y < PAGE.top + 150 ? 90 : 0);
+      ctx.strokeStyle = 'rgba(45, 30, 40, 0.12)';
       ctx.lineWidth = 1.6;
       while (x < x1 - 20) {
         const word = rng.int(2, 7);
@@ -209,6 +209,114 @@ function paintBorder(ctx, rng, folio) {
   }
 }
 
+const INITIALS = ['H', 'B', 'S'];
+
+/** A small five-petal flower, the kind scribes dotted along their vines. */
+function flower(ctx, x, y, r, color) {
+  ctx.fillStyle = color;
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 1.2;
+  for (let i = 0; i < 5; i += 1) {
+    const a = (i / 5) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(x + Math.cos(a) * r * 0.6, y + Math.sin(a) * r * 0.6, r * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+  }
+  ctx.fillStyle = PALETTE.gold;
+  ctx.beginPath();
+  ctx.arc(x, y, r * 0.36, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+}
+
+/**
+ * The painted decoration inside the page, faded so the beasts stay readable: a large illuminated
+ * initial opening the first column, red rubric lines, coloured paragraph marks, and a flowering
+ * vine climbing the gutter between the columns.
+ */
+function paintIllumination(ctx, rng, folio) {
+  const { left, top, right, bottom } = PAGE;
+  const colors = [PALETTE.verdigris, PALETTE.vermilion, PALETTE.lapis];
+  const main = colors[folio];
+  ctx.save();
+  ctx.globalAlpha = 0.62;
+  // the initial: a gold square, a coloured field, the letter in cream with an ink outline
+  const ix = left + 26;
+  const iy = top + 22;
+  const s = 104;
+  ctx.fillStyle = PALETTE.gold;
+  ctx.fillRect(ix - 6, iy - 6, s + 12, s + 12);
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(ix - 6, iy - 6, s + 12, s + 12);
+  ctx.fillStyle = main;
+  ctx.fillRect(ix, iy, s, s);
+  for (let i = 0; i < 18; i += 1) {
+    ctx.fillStyle = PALETTE.goldLight;
+    ctx.beginPath();
+    ctx.arc(ix + rng.range(8, s - 8), iy + rng.range(8, s - 8), rng.range(1.5, 3), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.font = `bold 92px ${'Palatino Linotype, Palatino, Georgia, serif'}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = PALETTE.ink;
+  ctx.strokeText(INITIALS[folio], ix + s / 2, iy + s / 2 + 6);
+  ctx.fillStyle = PALETTE.cream;
+  ctx.fillText(INITIALS[folio], ix + s / 2, iy + s / 2 + 6);
+  // a vine trailing down from the initial along the outer margin
+  vine(ctx, rng, ix + 10, iy + s + 8, ix + 10, bottom - 40, PALETTE.verdigrisLight);
+  flower(ctx, ix + 10, bottom - 34, 9, PALETTE.vermilion);
+  // the gutter vine, with flowers in the three paint colours
+  const gx = (left + right) / 2;
+  vine(ctx, rng, gx, top + 30, gx, bottom - 30, PALETTE.verdigrisLight);
+  for (let y = top + 70, k = 0; y < bottom - 40; y += 96, k += 1) {
+    flower(ctx, gx, y, 10, [PALETTE.vermilion, PALETTE.lapisLight, PALETTE.goldLight][k % 3]);
+  }
+  // rubric lines (red script) at the head of each column, and paragraph marks
+  ctx.strokeStyle = 'rgba(178, 52, 34, 0.9)';
+  ctx.lineWidth = 2.4;
+  for (const [x0, x1] of [
+    [left + 150, gx - 40],
+    [gx + 40, right - 60],
+  ]) {
+    let x = x0;
+    ctx.beginPath();
+    while (x < x1 - 20) {
+      const h = rng.pick([8, 11, 14]);
+      ctx.moveTo(x, top + 48);
+      ctx.quadraticCurveTo(x + 2, top + 48 - h, x + 5, top + 46);
+      ctx.quadraticCurveTo(x + 6, top + 50, x + 9, top + 47);
+      x += rng.chance(0.2) ? 22 : 9;
+    }
+    ctx.stroke();
+  }
+  ctx.font = `bold 24px ${'Palatino Linotype, Palatino, Georgia, serif'}`;
+  for (let y = top + 140; y < bottom - 30; y += 30) {
+    if (!rng.chance(0.22)) continue;
+    const right_ = rng.chance(0.5);
+    ctx.fillStyle = rng.chance(0.5) ? PALETTE.vermilion : PALETTE.lapis;
+    ctx.fillText('¶', right_ ? gx + 52 : left + 150, y - 2);
+  }
+  // a gilded corner piece in the far corner of the page
+  for (const [cx, cy, sx, sy] of [
+    [right - 18, bottom - 18, -1, -1],
+    [right - 18, top + 18, -1, 1],
+  ]) {
+    ctx.strokeStyle = PALETTE.gold;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + sy * 90);
+    ctx.lineTo(cx, cy);
+    ctx.lineTo(cx + sx * 90, cy);
+    ctx.stroke();
+    flower(ctx, cx, cy, 11, main);
+  }
+  ctx.restore();
+}
+
 /** The finished page for a folio (0-2), painted once. */
 export function pageArt(folio) {
   if (cache.has(folio)) return cache.get(folio);
@@ -217,6 +325,7 @@ export function pageArt(folio) {
   const rng = createRng(1301 + folio * 17);
   paintSheet(ctx, rng);
   paintScript(ctx, rng);
+  paintIllumination(ctx, rng, folio);
   paintBorder(ctx, rng, folio);
   cache.set(folio, canvas);
   return canvas;
