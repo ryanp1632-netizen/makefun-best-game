@@ -57,10 +57,16 @@ const SCENES = {
     earlierRuns(ledger, [seed + 100], 'scribe');
     // a patient hand (it waits for a crowd of six before it draws) keeps ink in the well, so the
     // cover catches a big loop through a crowded page with ink to spare and a Flourish chain running
-    let game = newGame(seed, 'scribe', true, 6);
+    // from this seed on, the first run whose page holds that moment with a crowd still around it
     const crowded = (run) => run.foes.filter((f) => !f.dead).length;
-    const good = (run, events) => run.time >= 130 && crowded(run) >= 15 && run.ink.level >= run.ink.max * 0.4 && run.flourish.mult >= 2 && events.some((e) => e.type === 'loop' && e.n >= 7);
-    if (!playUntil(game, good, 400)) {
+    const good = (run, events) => run.time >= 130 && crowded(run) >= 20 && run.ink.level >= run.ink.max * 0.4 && run.flourish.mult >= 2 && events.some((e) => e.type === 'loop' && e.n >= 7 && Math.abs(e.x - 640) < 280 && Math.abs(e.y - 410) < 170);
+    let game = null;
+    let found = false;
+    for (let s = seed; s < seed + 12 && !found; s += 1) {
+      game = newGame(s, 'scribe', true, 6);
+      found = playUntil(game, good, 420);
+    }
+    if (!found) {
       game = newGame(seed, 'scribe');
       playUntil(game, (run) => run.time >= 168, 400);
       playUntil(game, (run, events) => crowded(run) >= 22 && events.some((e) => e.type === 'loop' && e.n >= 5), 120);

@@ -52,7 +52,7 @@ export function panel(ctx, x, y, w, h, opts = {}) {
   ctx.stroke();
 }
 
-export function bar(ctx, x, y, w, h, frac, color, back = 'rgba(28, 24, 38, 0.18)') {
+export function bar(ctx, x, y, w, h, frac, color, back = 'rgba(28, 24, 38, 0.18)', edge = PALETTE.ink) {
   ctx.fillStyle = back;
   roundRect(ctx, x, y, w, h, h / 2);
   ctx.fill();
@@ -62,7 +62,7 @@ export function bar(ctx, x, y, w, h, frac, color, back = 'rgba(28, 24, 38, 0.18)
     roundRect(ctx, x, y, Math.max(h, w * f), h, h / 2);
     ctx.fill();
   }
-  ctx.strokeStyle = PALETTE.ink;
+  ctx.strokeStyle = edge;
   ctx.lineWidth = 1.6;
   roundRect(ctx, x, y, w, h, h / 2);
   ctx.stroke();

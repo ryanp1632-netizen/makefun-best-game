@@ -115,6 +115,20 @@ export function drawParticles(ctx, fx) {
   ctx.globalAlpha = 1;
 }
 
+/** Popup ink colours lifted to their bright versions for the dark lozenges. */
+const BRIGHT = { '#a5760c': '#ffd75e', '#c4351c': '#ff8a66', '#2647a3': '#9db8ff' };
+
+function roundPill(ctx, x, y, w, h) {
+  const r = h / 2;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
 export function drawPopups(ctx, fx) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -123,12 +137,28 @@ export function drawPopups(ctx, fx) {
     const rise = pop.age * 40;
     const pulse = pop.age < 0.15 ? 1 + (0.15 - pop.age) * 3 : 1;
     ctx.globalAlpha = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
-    ctx.font = `bold ${Math.round(pop.size * pulse)}px ${FONT}`;
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = 'rgba(255, 248, 228, 0.95)';
-    ctx.strokeText(pop.text, pop.x, pop.y - rise);
-    ctx.fillStyle = pop.color;
-    ctx.fillText(pop.text, pop.x, pop.y - rise);
+    const size = Math.round(pop.size * 1.3 * pulse);
+    ctx.font = `bold ${size}px ${FONT}`;
+    const x = Math.max(80, Math.min(VIEW.w - 80, pop.x));
+    const y = pop.y - rise;
+    if (pop.size >= 20) {
+      // the big ones sit on a dark lozenge, bright enough to read across the page
+      const w = ctx.measureText(pop.text).width + size * 0.9;
+      ctx.fillStyle = 'rgba(36, 22, 14, 0.72)';
+      roundPill(ctx, x - w / 2, y - size * 0.62, w, size * 1.24);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(247, 215, 106, 0.85)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.fillStyle = BRIGHT[pop.color] || '#fff3d6';
+      ctx.fillText(pop.text, x, y + 1);
+    } else {
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(255, 248, 228, 0.95)';
+      ctx.strokeText(pop.text, x, y);
+      ctx.fillStyle = pop.color;
+      ctx.fillText(pop.text, x, y);
+    }
   }
   ctx.globalAlpha = 1;
 }

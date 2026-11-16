@@ -56,14 +56,21 @@ export function drawIlluminations(ctx, ink, time) {
     ctx.closePath();
     const r = 40 + loop.n * 18;
     const g = ctx.createRadialGradient(loop.x, loop.y, 0, loop.x, loop.y, r * 2);
-    g.addColorStop(0, PALETTE.goldPale);
-    g.addColorStop(0.5, PALETTE.goldLight);
-    g.addColorStop(1, PALETTE.gold);
+    // burnished gold leaf: bright at the heart, deep amber at the rim, with a glow around the line
+    g.addColorStop(0, 'rgba(255, 246, 200, 0.55)');
+    g.addColorStop(0.45, PALETTE.goldLight);
+    g.addColorStop(1, '#c47f0a');
     ctx.fillStyle = g;
     ctx.fill();
     ctx.globalAlpha = alpha;
+    ctx.shadowColor = 'rgba(255, 196, 40, 0.9)';
+    ctx.shadowBlur = 22;
     ctx.strokeStyle = PALETTE.gold;
     ctx.lineWidth = 5 + 8 * (1 - t);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = 'rgba(255, 250, 225, 0.9)';
+    ctx.lineWidth = 2;
     ctx.stroke();
     if (loop.n > 0) {
       ctx.strokeStyle = `rgba(255, 241, 184, ${alpha})`;

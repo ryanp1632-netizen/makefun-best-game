@@ -166,7 +166,7 @@ export function illuminate(run, loop) {
   const label = n > 1 ? `ILLUMINATED x${n}  +#` : 'ILLUMINATED  +#';
   addScore(run, 15 * n * n, center.x, center.y - 20, true, label);
   if (n >= 4 && rubricLevel(run, 'dropcap') > 0) castSeal(run, center.x, center.y, true);
-  if (n >= 6) popup(run, center.x, center.y + 18, n >= 10 ? 'MAGNIFICAT!' : 'GLORIOUS!', '#c4351c', 26);
+  if (n >= 6) popup(run, center.x, center.y + 52, n >= 10 ? 'MAGNIFICAT!' : 'GLORIOUS!', '#c4351c', 26);
   emit(run, 'loop', { n, x: center.x, y: center.y, poly: loop });
   return n;
 }

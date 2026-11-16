@@ -12,31 +12,69 @@ import { bar, keyCap, panel, roundRect, text } from './widgets.js';
 
 const fmt = (n) => Math.round(n).toLocaleString('en-US');
 
+// The HUD is the manuscript's leather binding: dark tooled bands with gold rules and light lettering.
+const CREAM = '#fff3d6';
+const MUTED = '#d9c49a';
+const BRIGHT_RED = '#ff8a66';
+const TROUGH = 'rgba(0, 0, 0, 0.45)';
+const RULE = 'rgba(247, 215, 106, 0.75)';
+const darkBar = (ctx, x, y, w, h, frac, color) => bar(ctx, x, y, w, h, frac, color, TROUGH, RULE);
+
+/** A recessed panel in the binding. */
+function inset(ctx, x, y, w, h) {
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.28)';
+  roundRect(ctx, x, y, w, h, 10);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(247, 215, 106, 0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+}
+
+function binding(ctx, y0, y1, ruleY) {
+  const g = ctx.createLinearGradient(0, y0, 0, y1);
+  g.addColorStop(0, '#4a2f1d');
+  g.addColorStop(1, '#2b1a10');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, y0, VIEW.w, y1 - y0);
+  ctx.strokeStyle = PALETTE.gold;
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(0, ruleY);
+  ctx.lineTo(VIEW.w, ruleY);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(247, 215, 106, 0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, ruleY + (ruleY > y0 + 10 ? -6 : 6));
+  ctx.lineTo(VIEW.w, ruleY + (ruleY > y0 + 10 ? -6 : 6));
+  ctx.stroke();
+}
+
 function drawHeartsAndInk(ctx, run, time) {
   const p = run.player;
   for (let i = 0; i < p.maxHearts; i += 1) {
     const full = i < p.hearts;
     const beat = full && i === p.hearts - 1 && p.hearts <= 2 ? 1 + Math.sin(time * 10) * 0.12 : 1;
-    drawHeartShape(ctx, 34 + i * 34, 30, 13 * beat, full ? PALETTE.vermilion : 'rgba(28,24,38,0.12)', full ? PALETTE.ink : 'rgba(28,24,38,0.4)');
+    drawHeartShape(ctx, 34 + i * 34, 30, 13 * beat, full ? PALETTE.vermilion : 'rgba(255,243,214,0.1)', full ? CREAM : 'rgba(255,243,214,0.45)');
   }
   const ink = run.ink;
-  drawIcon(ctx, 'well', 32, 64, 26, PALETTE.lapis);
+  drawIcon(ctx, 'well', 32, 64, 26, PALETTE.lapisLight);
   const dry = ink.dryFlash > 0 && Math.floor(time * 10) % 2 === 0;
-  bar(ctx, 52, 55, 200, 18, ink.level / ink.max, dry ? PALETTE.vermilion : PALETTE.lapis);
-  text(ctx, `INK ${Math.floor(ink.level)}`, 262, 70, { size: 18, color: dry ? PALETTE.vermilion : PALETTE.ink });
+  darkBar(ctx, 52, 55, 200, 18, ink.level / ink.max, dry ? PALETTE.vermilion : PALETTE.lapisLight);
+  text(ctx, `INK ${Math.floor(ink.level)}`, 262, 70, { size: 18, color: dry ? BRIGHT_RED : CREAM });
 }
 
 function drawFolioLine(ctx, run) {
   const folio = FOLIOS[run.folio];
   const cx = VIEW.w / 2;
-  text(ctx, `FOLIO ${NUMERALS[run.folio]}: ${folio.title.toUpperCase()}`, cx, 30, { size: 25, color: PALETTE.ink, align: 'center' });
+  text(ctx, `FOLIO ${NUMERALS[run.folio]}: ${folio.title.toUpperCase()}`, cx, 30, { size: 25, color: PALETTE.goldLight, align: 'center' });
   if ((run.stage === 'boss' || run.stage === 'bossIntro') && run.boss) {
     const boss = run.boss;
     const def = BOSSES[boss.kind];
-    text(ctx, def.name + (boss.armored && boss.crack <= 0 ? '  (SHELL: loop it!)' : boss.phase2 ? '  (ENRAGED)' : ''), cx, 54, { size: 17, color: PALETTE.vermilion, align: 'center' });
-    bar(ctx, cx - 250, 62, 500, 16, boss.hp / boss.maxHp, PALETTE.vermilion);
+    text(ctx, def.name + (boss.armored && boss.crack <= 0 ? '  (SHELL: loop it!)' : boss.phase2 ? '  (ENRAGED)' : ''), cx, 54, { size: 17, color: BRIGHT_RED, align: 'center' });
+    darkBar(ctx, cx - 250, 62, 500, 16, boss.hp / boss.maxHp, PALETTE.vermilion);
   } else if (run.stage === 'bossIntro') {
-    text(ctx, 'A GROTESQUE APPROACHES', cx, 62, { size: 20, color: PALETTE.vermilion, align: 'center' });
+    text(ctx, 'A GROTESQUE APPROACHES', cx, 62, { size: 20, color: BRIGHT_RED, align: 'center' });
   } else {
     const verseLength = folio.verses[run.verse].length;
     const pips = folio.verses.length + 1;
@@ -47,10 +85,10 @@ function drawFolioLine(ctx, run) {
       const done = i < run.verse || run.stage === 'folioDone';
       const now = i === run.verse && run.stage === 'verse';
       const x = x0 + i * w + 4;
-      ctx.fillStyle = done ? PALETTE.gold : now ? PALETTE.goldPale : 'rgba(28,24,38,0.08)';
+      ctx.fillStyle = done ? PALETTE.gold : now ? PALETTE.goldPale : 'rgba(255,243,214,0.08)';
       roundRect(ctx, x, 44, w - 8, 30, 7);
       ctx.fill();
-      ctx.strokeStyle = PALETTE.ink;
+      ctx.strokeStyle = now || done ? PALETTE.goldLight : 'rgba(247,215,106,0.5)';
       ctx.lineWidth = now ? 2.6 : 1.4;
       ctx.stroke();
       if (now) {
@@ -58,22 +96,22 @@ function drawFolioLine(ctx, run) {
         roundRect(ctx, x, 44, (w - 8) * Math.min(1, run.verseTime / verseLength), 30, 7);
         ctx.fill();
       }
-      text(ctx, isBoss ? 'GROTESQUE' : `VERSE ${NUMERALS[i]}`, x + (w - 8) / 2, 60, { size: isBoss ? 14 : 16, color: isBoss ? PALETTE.vermilion : PALETTE.ink, align: 'center', baseline: 'middle' });
+      text(ctx, isBoss ? 'GROTESQUE' : `VERSE ${NUMERALS[i]}`, x + (w - 8) / 2, 60, { size: isBoss ? 14 : 16, color: isBoss ? (done || now ? PALETTE.vermilion : BRIGHT_RED) : done || now ? PALETTE.ink : CREAM, align: 'center', baseline: 'middle' });
     }
   }
 }
 
 function drawScore(ctx, run, best, time) {
   const right = VIEW.w - 24;
-  text(ctx, 'SCORE', right - 220, 24, { size: 15, color: PALETTE.inkSoft });
-  text(ctx, fmt(run.score), right, 40, { size: 36, align: 'right', color: PALETTE.ink });
-  text(ctx, `BEST ${fmt(Math.max(best, run.score))}`, right - 220, 46, { size: 15, color: PALETTE.inkSoft });
+  text(ctx, 'SCORE', right - 220, 24, { size: 15, color: MUTED });
+  text(ctx, fmt(run.score), right, 40, { size: 36, align: 'right', color: CREAM });
+  text(ctx, `BEST ${fmt(Math.max(best, run.score))}`, right - 220, 46, { size: 15, color: MUTED });
   const f = run.flourish;
   const live = f.timer > 0;
   const mult = `FLOURISH x${f.mult}`;
   const pulse = live && f.mult > 1 ? 1 + Math.sin(time * 12) * 0.05 : 1;
-  text(ctx, mult, right, 72, { size: Math.round(22 * pulse), align: 'right', color: f.mult > 1 ? PALETTE.vermilion : live ? PALETTE.ink : 'rgba(28,24,38,0.4)' });
-  if (live) bar(ctx, right - 330, 62, 120, 10, f.timer / FLOURISH_WINDOW, PALETTE.gold);
+  text(ctx, mult, right, 72, { size: Math.round(22 * pulse), align: 'right', color: f.mult > 1 ? BRIGHT_RED : live ? CREAM : 'rgba(255,243,214,0.4)' });
+  if (live) darkBar(ctx, right - 330, 62, 120, 10, f.timer / FLOURISH_WINDOW, PALETTE.gold);
 }
 
 function drawBottom(ctx, run, time) {
@@ -87,15 +125,19 @@ function drawBottom(ctx, run, time) {
   ctx.lineWidth = 2.5;
   ctx.stroke();
   text(ctx, `${run.level}`, 42, y + 31, { size: 24, align: 'center', baseline: 'middle' });
-  text(ctx, 'ILLUMINATION', 76, y + 20, { size: 15, color: PALETTE.inkSoft });
-  bar(ctx, 76, y + 28, 176, 14, run.xp / run.xpNext, PALETTE.gold);
-  text(ctx, `leaf ${run.xp}/${run.xpNext}`, 260, y + 41, { size: 14, color: PALETTE.inkSoft, weight: 'normal' });
+  text(ctx, 'ILLUMINATION', 76, y + 20, { size: 15, color: MUTED });
+  darkBar(ctx, 76, y + 28, 176, 14, run.xp / run.xpNext, PALETTE.goldLight);
+  text(ctx, `leaf ${run.xp}/${run.xpNext}`, 260, y + 41, { size: 14, color: MUTED, weight: 'normal' });
   // rubric strip
   let x = 80;
   const owned = RUBRICS.filter((r) => run.rubrics[r.id]);
   for (const r of owned) {
-    drawIcon(ctx, r.icon, x, y + 54, 18, r.color);
-    if (run.rubrics[r.id] > 1) text(ctx, `${run.rubrics[r.id]}`, x + 9, y + 62, { size: 11 });
+    ctx.fillStyle = 'rgba(255, 243, 214, 0.9)';
+    ctx.beginPath();
+    ctx.arc(x, y + 54, 10.5, 0, Math.PI * 2);
+    ctx.fill();
+    drawIcon(ctx, r.icon, x, y + 54, 16, r.color);
+    if (run.rubrics[r.id] > 1) text(ctx, `${run.rubrics[r.id]}`, x + 9, y + 63, { size: 11, color: CREAM });
     x += 24;
     if (x > 380) break;
   }
@@ -169,9 +211,10 @@ function drawFirstLoopHint(ctx, run, time) {
 }
 
 export function drawHud(ctx, run, best, time) {
-  ctx.fillStyle = 'rgba(242, 228, 195, 0.55)';
-  ctx.fillRect(0, 0, VIEW.w, HUD.topBand - 2);
-  ctx.fillRect(0, HUD.bottomBand, VIEW.w, VIEW.h - HUD.bottomBand);
+  binding(ctx, 0, HUD.topBand, HUD.topBand - 2);
+  binding(ctx, HUD.bottomBand, VIEW.h, HUD.bottomBand + 2);
+  inset(ctx, 8, 6, 352, HUD.topBand - 14);
+  inset(ctx, 920, 6, 352, HUD.topBand - 14);
   drawHeartsAndInk(ctx, run, time);
   drawFolioLine(ctx, run);
   drawScore(ctx, run, best, time);
