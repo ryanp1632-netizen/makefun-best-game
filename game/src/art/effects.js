@@ -79,6 +79,8 @@ export function absorbEvents(fx, events) {
         clearStains(fx.stains);
         break;
       case 'popup':
+        // a new big notice clears older big ones near it, so two strikes never print over each other
+        if (e.size >= 20) fx.popups = fx.popups.filter((p) => p.age === 0 || p.size < 20 || (p.age < 0.6 && (Math.abs(p.x - e.x) > 320 || Math.abs(p.y - p.age * 40 - e.y) > 110)));
         fx.popups.push({ x: e.x, y: e.y, text: e.text, color: e.color, size: e.size, age: 0 });
         break;
       default:

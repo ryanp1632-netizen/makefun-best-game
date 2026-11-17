@@ -235,7 +235,10 @@ function drawRoster(ctx, run, time) {
   const x = PAGE.right - 236;
   const y = PAGE.top + 8;
   const w = 226;
-  const h = 72 + kinds.length * 36;
+  const owned = RUBRICS.filter((r) => run.rubrics[r.id]);
+  const shown = owned.slice(0, 6);
+  const listH = 72 + kinds.length * 36;
+  const h = listH + (owned.length ? 34 + shown.length * 26 + (owned.length > shown.length ? 20 : 0) : 0);
   const p = run.player;
   const near = (p.x > x - 50 && p.y < y + h + 50) || (run.ink.current && run.ink.current.maxX > x - 10 && run.ink.current.minY < y + h);
   ctx.save();
@@ -265,7 +268,34 @@ function drawRoster(ctx, run, time) {
   if (run.stage === 'boss' || run.stage === 'bossIntro') next = 'GROTESQUE ON THE PAGE';
   else if (run.verse + 1 < folio.verses.length) next = `NEXT: VERSE ${NUMERALS[run.verse + 1]}`;
   else next = `NEXT: ${BOSSES[folio.boss].name}`;
-  text(ctx, next, x + 12, y + h - 11, { size: 14, color: BRIGHT_RED });
+  text(ctx, next, x + 12, y + listH - 11, { size: 14, color: BRIGHT_RED });
+  if (owned.length) {
+    const top = y + listH;
+    ctx.strokeStyle = 'rgba(247, 215, 106, 0.45)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x + 10, top + 2);
+    ctx.lineTo(x + w - 10, top + 2);
+    ctx.stroke();
+    text(ctx, 'YOUR RUBRICS', x + 12, top + 24, { size: 16, color: PALETTE.goldLight });
+    text(ctx, `${owned.length}`, x + w - 12, top + 24, { size: 18, color: CREAM, align: 'right' });
+    shown.forEach((r, i) => {
+      const ry = top + 46 + i * 26;
+      ctx.fillStyle = 'rgba(255, 243, 214, 0.92)';
+      ctx.beginPath();
+      ctx.arc(x + 22, ry, 10, 0, Math.PI * 2);
+      ctx.fill();
+      drawIcon(ctx, r.icon, x + 22, ry, 15, r.color);
+      text(ctx, r.name, x + 40, ry + 5, { size: 15, color: CREAM });
+      for (let k = 0; k < r.max; k += 1) {
+        ctx.fillStyle = k < run.rubrics[r.id] ? PALETTE.goldLight : 'rgba(255, 243, 214, 0.18)';
+        ctx.beginPath();
+        ctx.arc(x + w - 16 - (r.max - 1 - k) * 11, ry, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    });
+    if (owned.length > shown.length) text(ctx, `+ ${owned.length - shown.length} more`, x + 40, y + h - 8, { size: 13, color: MUTED, weight: 'normal', italic: true });
+  }
   ctx.restore();
 }
 
