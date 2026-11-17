@@ -121,7 +121,7 @@ export function updateDirector(run, dt) {
 }
 
 /** Short hint shown under each verse banner, teaching one idea at a time. */
-function versePrompt(run) {
+export function versePrompt(run) {
   const hints = [
     ['Loop several blots at once for a bigger strike', 'Wasps fly over ink: dart them or loop them', 'Snail shells shrug off darts: loop to crack them'],
     ['Gargoyles spit ink puddles that slow you', 'A Blotch splits in three: catch the brood', 'Bookworms are long: loop their middle'],

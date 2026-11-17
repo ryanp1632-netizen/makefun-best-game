@@ -62,6 +62,20 @@ const SCENES = {
     const good = (run, events) => run.time >= 130 && crowded(run) >= 20 && run.ink.level >= run.ink.max * 0.4 && run.flourish.mult >= 2 && events.some((e) => e.type === 'loop' && e.n >= 7 && Math.abs(e.x - 640) < 280 && Math.abs(e.y - 410) < 170);
     let game = null;
     let found = false;
+    // first choice: the last Grotesque, the Great Blot, fought with hearts to spare, a loop just
+    // gilded around it and the quill already three-quarters round the next one
+    for (let s = seed; s < seed + 10 && !found; s += 1) {
+      game = newGame(s, 'scribe');
+      let lastLoop = -9;
+      const atBlot = (run) => run.folio === 2 && run.stage === 'boss' && run.boss && run.boss.emerge <= 0;
+      const fight = (run, events) => {
+        if (events.some((e) => e.type === 'loop' && e.n >= 1)) lastLoop = run.time;
+        if (!atBlot(run) || run.player.hearts < 4 || run.boss.hp > run.boss.maxHp * 0.8 || run.boss.hp < run.boss.maxHp * 0.25) return false;
+        const pl = game.pilot;
+        return run.time - lastLoop < 0.9 && run.flourish.mult >= 3 && crowded(run) >= 6 && pl.plan && pl.step > pl.plan.length * 0.74 && pl.step < pl.plan.length * 0.86;
+      };
+      found = playUntil(game, fight, 900);
+    }
     for (let s = seed; s < seed + 12 && !found; s += 1) {
       game = newGame(s, 'scribe', true, 6);
       found = playUntil(game, good, 420);
@@ -71,7 +85,7 @@ const SCENES = {
       playUntil(game, (run) => run.time >= 168, 400);
       playUntil(game, (run, events) => crowded(run) >= 22 && events.some((e) => e.type === 'loop' && e.n >= 5), 120);
     }
-    playUntil(game, () => false, 0.12);
+    if (!game.pilot.plan) playUntil(game, () => false, 0.12);
     const { run, fx, pilot } = game;
     drawWorld(ctx, run, fx, run.time);
     drawHud(ctx, run, ledger.best.scribe, run.time);
