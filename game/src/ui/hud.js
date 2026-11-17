@@ -1,9 +1,9 @@
 // The heads-up display around the page: hearts and ink (left), folio, verse and boss (centre),
 // score, best and Flourish (right); level, rubrics, the win/lose rule and cooldowns (bottom).
-import { FONT, HUD, PAGE, PALETTE, SEAL, VIEW } from '../config.js';
-import { FOLIOS, NUMERALS, versePrompt } from '../sim/director.js';
-import { clamp, pointInPolygon } from '../sim/geometry.js';
-import { isFrozen } from '../sim/run.js';
+import { HUD, PAGE, PALETTE, SEAL, VIEW } from '../config.js';
+import { FOE_KINDS } from '../sim/foes.js';
+import { drawFoe } from '../art/foeArt.js';
+import { FOLIOS, NUMERALS } from '../sim/director.js';
 import { BOSSES } from '../sim/bosses.js';
 import { FLOURISH_WINDOW } from '../sim/scoring.js';
 import { RUBRICS, rubricById } from '../sim/rubrics.js';
@@ -212,75 +212,65 @@ function drawFirstLoopHint(ctx, run, time) {
   text(ctx, 'Hold the LEFT MOUSE BUTTON and draw a circle around the blots', cx + 24, y + 7, { size: 19, align: 'center' });
 }
 
-/** A dark gold-edged lozenge, the same as the big score popups. */
-function lozenge(ctx, x, y, w, h) {
-  ctx.fillStyle = 'rgba(36, 22, 14, 0.8)';
-  roundRect(ctx, x, y, w, h, h / 2);
+const ROLES = {
+  blotling: ['swarms in packs', '#d9c49a'],
+  wasp: ['flies over ink', '#ffd75e'],
+  snail: ['shelled: loop it', '#9db8ff'],
+  spitter: ['spits ink puddles', '#ff8a66'],
+  worm: ['loop its middle', '#e8d9a0'],
+  blotch: ['splits in three', '#c9a8ff'],
+};
+
+/** The roll of foes on the page, by kind, with what each does and what comes next. */
+function drawRoster(ctx, run, time) {
+  if (run.offer || run.stage === 'won' || run.stage === 'lost') return;
+  const counts = {};
+  let total = 0;
+  for (const f of run.foes) {
+    if (f.dead || f.boss || !ROLES[f.kind]) continue;
+    counts[f.kind] = (counts[f.kind] || 0) + 1;
+    total += 1;
+  }
+  const kinds = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  const x = PAGE.right - 236;
+  const y = PAGE.top + 8;
+  const w = 226;
+  const h = 72 + kinds.length * 36;
+  const p = run.player;
+  const near = (p.x > x - 50 && p.y < y + h + 50) || (run.ink.current && run.ink.current.maxX > x - 10 && run.ink.current.minY < y + h);
+  ctx.save();
+  ctx.globalAlpha = near ? 0.3 : 1;
+  ctx.fillStyle = 'rgba(36, 22, 14, 0.84)';
+  roundRect(ctx, x, y, w, h, 10);
   ctx.fill();
   ctx.strokeStyle = 'rgba(247, 215, 106, 0.85)';
   ctx.lineWidth = 2;
   ctx.stroke();
-}
-
-/** While the quill is down, count the foes the stroke would close around, beside the nib. */
-function drawLoopGauge(ctx, run) {
-  const stroke = run.ink.current;
-  if (!stroke || stroke.points.length < 10 || isFrozen(run)) return;
-  const pts = stroke.points;
-  const tail = pts[pts.length - 1];
-  const head = pts[0];
-  if (Math.hypot(tail.x - head.x, tail.y - head.y) > 420) return;
-  let n = 0;
-  let boss = false;
-  for (const f of run.foes) {
-    if (f.dead || f.emerge > 0 || !pointInPolygon(f.x, f.y, pts)) continue;
-    if (f.boss) boss = true;
-    else n += 1;
-  }
-  if (!n && !boss) return;
-  const label = boss ? (n ? `GROTESQUE + ${n} INSIDE` : 'GROTESQUE INSIDE') : `${n} INSIDE`;
-  ctx.font = `bold 20px ${FONT}`;
-  const w = Math.max(ctx.measureText(label).width, 128) + 34;
-  const x = clamp(tail.x + 26, PAGE.left + 4, PAGE.right - w - 4);
-  const y = clamp(tail.y + 22, PAGE.top + 4, PAGE.bottom - 58);
-  lozenge(ctx, x, y, w, 50);
-  text(ctx, label, x + w / 2, y + 21, { size: 20, color: '#ffd75e', align: 'center', baseline: 'middle' });
-  text(ctx, 'close the loop!', x + w / 2, y + 39, { size: 13, color: CREAM, align: 'center', baseline: 'middle', weight: 'normal', italic: true });
-}
-
-const BOSS_TIPS = {
-  gastropod: 'Darts glance off the shell: LOOP the Abbot to crack it, then strike',
-  wyrm: 'Loop across the Bookwyrm: every segment caught inside is struck',
-  blot: 'SHIFT hops through its ink rings: loop the Great Blot and its brood together',
-};
-
-/** A ribbon at the foot of the page with the lesson of this verse, or the Grotesque's weakness. */
-function drawTipRibbon(ctx, run) {
-  if (run.banner || run.offer || (run.folio === 0 && run.stats.illuminated === 0)) return;
-  let tip = null;
-  if (run.stage === 'boss' && run.boss) tip = BOSS_TIPS[run.boss.kind];
-  else if (run.stage === 'verse') tip = versePrompt(run);
-  if (!tip) return;
-  const p = run.player;
-  const y = PAGE.bottom - 40;
-  ctx.font = `bold 17px ${FONT}`;
-  const w = ctx.measureText(tip).width + 96;
-  const x = VIEW.w / 2 - w / 2;
-  const near = p.x > x - 40 && p.x < x + w + 40 && p.y > y - 60;
-  ctx.save();
-  ctx.globalAlpha = near ? 0.3 : 1;
-  lozenge(ctx, x, y, w, 32);
-  ctx.fillStyle = PALETTE.vermilion;
-  roundRect(ctx, x + 6, y + 5, 46, 22, 11);
-  ctx.fill();
-  text(ctx, 'TIP', x + 29, y + 17, { size: 13, color: CREAM, align: 'center', baseline: 'middle' });
-  text(ctx, tip, x + 62, y + 17, { size: 17, color: CREAM, baseline: 'middle' });
+  text(ctx, 'ON THE PAGE', x + 12, y + 24, { size: 18, color: PALETTE.goldLight });
+  text(ctx, `${total}`, x + w - 12, y + 24, { size: 20, color: CREAM, align: 'right' });
+  kinds.forEach((kind, i) => {
+    const ry = y + 52 + i * 36;
+    const def = FOE_KINDS[kind];
+    ctx.save();
+    ctx.translate(x + 22, ry);
+    ctx.scale(0.75, 0.75);
+    drawFoe(ctx, { kind, x: 0, y: 0, r: Math.min(def.r, 18), vx: 0, vy: 0, hp: 1, maxHp: 1, emerge: 0, stun: 0, flash: 0, crack: 0, slow: 0, gild: 0, timer: 2, phase: i, facing: 0, segments: null }, time + i, { x: 0, y: 120 });
+    ctx.restore();
+    text(ctx, def.name.replace('Gargoyle ', '').replace('Scribble ', ''), x + 46, ry - 2, { size: 17, color: ROLES[kind][1] });
+    text(ctx, ROLES[kind][0], x + 46, ry + 13, { size: 13, color: MUTED, weight: 'normal', italic: true });
+    text(ctx, `x${counts[kind]}`, x + w - 12, ry + 5, { size: 19, color: CREAM, align: 'right' });
+  });
+  const folio = FOLIOS[run.folio];
+  let next;
+  if (run.stage === 'boss' || run.stage === 'bossIntro') next = 'GROTESQUE ON THE PAGE';
+  else if (run.verse + 1 < folio.verses.length) next = `NEXT: VERSE ${NUMERALS[run.verse + 1]}`;
+  else next = `NEXT: ${BOSSES[folio.boss].name}`;
+  text(ctx, next, x + 12, y + h - 11, { size: 14, color: BRIGHT_RED });
   ctx.restore();
 }
 
 export function drawHud(ctx, run, best, time) {
-  drawTipRibbon(ctx, run);
-  drawLoopGauge(ctx, run);
+  drawRoster(ctx, run, time);
   binding(ctx, 0, HUD.topBand, HUD.topBand - 2);
   binding(ctx, HUD.bottomBand, VIEW.h, HUD.bottomBand + 2);
   inset(ctx, 8, 6, 352, HUD.topBand - 14);
