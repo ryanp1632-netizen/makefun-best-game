@@ -122,12 +122,17 @@ export function updateDirector(run, dt) {
 
 /** Short hint shown under each verse banner, teaching one idea at a time. */
 function versePrompt(run) {
+  return verseHint(run.folio, run.verse);
+}
+
+/** The lesson of one verse. */
+export function verseHint(folio, verse) {
   const hints = [
     ['Loop several blots at once for a bigger strike', 'Wasps fly over ink: dart them or loop them', 'Snail shells shrug off darts: loop to crack them'],
     ['Gargoyles spit ink puddles that slow you', 'A Blotch splits in three: catch the brood', 'Bookworms are long: loop their middle'],
     ['The last leaf: every foe returns', 'Chain loops within 4 s to raise the Flourish', 'Hold the line: the Great Blot is near'],
   ];
-  return hints[run.folio][run.verse];
+  return hints[folio][verse];
 }
 
 /** A Grotesque has fallen: clear the page, reward a clean folio and turn the page. */
